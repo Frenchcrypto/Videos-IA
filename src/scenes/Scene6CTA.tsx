@@ -2,6 +2,43 @@ import React from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COLORS, FONT, SKOOL_URL} from '../utils/colors';
 import {fadeIn, fadeOut, slideUp} from '../utils/animations';
+import {ParticleBg} from '../components/ParticleBg';
+
+// Anneau pulsant animé
+const PulsingRing: React.FC<{
+	frame: number;
+	offset: number;
+	size: number;
+	color: string;
+	speed: number;
+}> = ({frame, offset, size, color, speed}) => {
+	const progress = ((frame * speed + offset) % 120) / 120;
+	const scale = interpolate(progress, [0, 1], [0.5, 2.2], {
+		extrapolateLeft: 'clamp',
+		extrapolateRight: 'clamp',
+	});
+	const opacity = interpolate(progress, [0, 0.4, 1], [0.7, 0.35, 0], {
+		extrapolateLeft: 'clamp',
+		extrapolateRight: 'clamp',
+	});
+
+	return (
+		<div
+			style={{
+				position: 'absolute',
+				top: '50%',
+				left: '50%',
+				width: size,
+				height: size,
+				transform: `translate(-50%, -50%) scale(${scale})`,
+				borderRadius: '50%',
+				border: `1.5px solid ${color}`,
+				opacity,
+				pointerEvents: 'none',
+			}}
+		/>
+	);
+};
 
 export const Scene6CTA: React.FC = () => {
 	const frame = useCurrentFrame();
@@ -18,7 +55,6 @@ export const Scene6CTA: React.FC = () => {
 	// Lignes de texte
 	const line1Opacity = fadeIn(frame, 80, 25);
 	const line1Y = slideUp(frame, 80, 25, 25);
-
 	const line2Opacity = fadeIn(frame, 130, 25);
 	const line2Y = slideUp(frame, 130, 25, 25);
 
@@ -27,13 +63,12 @@ export const Scene6CTA: React.FC = () => {
 	const btnOpacity = fadeIn(frame, 200, 30);
 
 	// Glow pulsation sur le bouton
-	const glowPulse =
-		interpolate(
-			Math.sin((frame / 45) * Math.PI * 2),
-			[-1, 1],
-			[0.6, 1.0],
-			{extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
-		);
+	const glowPulse = interpolate(
+		Math.sin((frame / 45) * Math.PI * 2),
+		[-1, 1],
+		[0.6, 1.0],
+		{extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
+	);
 
 	// URL en bas
 	const urlOpacity = fadeIn(frame, 270, 25);
@@ -42,10 +77,11 @@ export const Scene6CTA: React.FC = () => {
 	const decorOpacity = fadeIn(frame, 50, 30);
 
 	// Stars / sparkles
-	const sparkle1 =
-		0.5 + 0.5 * Math.sin((frame / 30) * Math.PI * 2);
-	const sparkle2 =
-		0.5 + 0.5 * Math.sin((frame / 25) * Math.PI * 2 + 1.5);
+	const sparkle1 = 0.5 + 0.5 * Math.sin((frame / 30) * Math.PI * 2);
+	const sparkle2 = 0.5 + 0.5 * Math.sin((frame / 25) * Math.PI * 2 + 1.5);
+
+	// Anneaux pulsants — visibles une fois le bouton apparu
+	const ringsOpacity = fadeIn(frame, 210, 30);
 
 	return (
 		<div
@@ -64,14 +100,11 @@ export const Scene6CTA: React.FC = () => {
 				overflow: 'hidden',
 			}}
 		>
-			{/* Fond premium avec glow central */}
+			{/* Fond premium */}
 			<div
 				style={{
 					position: 'absolute',
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
+					inset: 0,
 					background: `
 						radial-gradient(ellipse 70% 50% at 50% 40%, #0F1A0F 0%, #070A07 55%),
 						radial-gradient(ellipse 40% 30% at 50% 40%, ${COLORS.gold}08 0%, transparent 70%)
@@ -79,7 +112,17 @@ export const Scene6CTA: React.FC = () => {
 				}}
 			/>
 
-			{/* Glow doré en arrière-plan */}
+			{/* Particules */}
+			<ParticleBg frame={frame} />
+
+			{/* Anneaux pulsants autour du bouton */}
+			<div style={{opacity: ringsOpacity}}>
+				<PulsingRing frame={frame} offset={0} size={420} color={COLORS.sageGreen} speed={1} />
+				<PulsingRing frame={frame} offset={40} size={420} color={COLORS.gold} speed={1} />
+				<PulsingRing frame={frame} offset={80} size={420} color={COLORS.sageGreenLight} speed={1} />
+			</div>
+
+			{/* Glow doré central */}
 			<div
 				style={{
 					position: 'absolute',
@@ -94,59 +137,11 @@ export const Scene6CTA: React.FC = () => {
 				}}
 			/>
 
-			{/* Sparkles décoratifs */}
-			<div
-				style={{
-					position: 'absolute',
-					top: '15%',
-					left: '12%',
-					fontFamily: FONT,
-					fontSize: 32,
-					color: COLORS.gold,
-					opacity: decorOpacity * sparkle1,
-				}}
-			>
-				✦
-			</div>
-			<div
-				style={{
-					position: 'absolute',
-					top: '20%',
-					right: '10%',
-					fontFamily: FONT,
-					fontSize: 24,
-					color: COLORS.sageGreen,
-					opacity: decorOpacity * sparkle2,
-				}}
-			>
-				✦
-			</div>
-			<div
-				style={{
-					position: 'absolute',
-					bottom: '25%',
-					left: '8%',
-					fontFamily: FONT,
-					fontSize: 20,
-					color: COLORS.gold,
-					opacity: decorOpacity * sparkle2,
-				}}
-			>
-				✦
-			</div>
-			<div
-				style={{
-					position: 'absolute',
-					bottom: '20%',
-					right: '12%',
-					fontFamily: FONT,
-					fontSize: 28,
-					color: COLORS.sageGreen,
-					opacity: decorOpacity * sparkle1,
-				}}
-			>
-				✦
-			</div>
+			{/* Sparkles */}
+			<div style={{position: 'absolute', top: '15%', left: '12%', fontFamily: FONT, fontSize: 32, color: COLORS.gold, opacity: decorOpacity * sparkle1}}>✦</div>
+			<div style={{position: 'absolute', top: '20%', right: '10%', fontFamily: FONT, fontSize: 24, color: COLORS.sageGreen, opacity: decorOpacity * sparkle2}}>✦</div>
+			<div style={{position: 'absolute', bottom: '25%', left: '8%', fontFamily: FONT, fontSize: 20, color: COLORS.gold, opacity: decorOpacity * sparkle2}}>✦</div>
+			<div style={{position: 'absolute', bottom: '20%', right: '12%', fontFamily: FONT, fontSize: 28, color: COLORS.sageGreen, opacity: decorOpacity * sparkle1}}>✦</div>
 
 			{/* Logo / Nom de marque */}
 			<div
@@ -159,7 +154,6 @@ export const Scene6CTA: React.FC = () => {
 					textAlign: 'center',
 				}}
 			>
-				{/* Badge premium */}
 				<div
 					style={{
 						display: 'inline-block',
@@ -172,14 +166,13 @@ export const Scene6CTA: React.FC = () => {
 						fontSize: 18,
 						color: COLORS.goldLight,
 						letterSpacing: '4px',
-						textTransform: 'uppercase',
+						textTransform: 'uppercase' as const,
 						fontWeight: 600,
 					}}
 				>
 					★ PREMIUM ★
 				</div>
 
-				{/* Nom principal */}
 				<div
 					style={{
 						fontFamily: FONT,
@@ -209,12 +202,12 @@ export const Scene6CTA: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Ligne dorée décorative */}
+			{/* Ligne dorée */}
 			<div
 				style={{
 					position: 'relative',
 					zIndex: 2,
-					width: 80,
+					width: interpolate(frame, [60, 95], [0, 80], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
 					height: 2,
 					background: `linear-gradient(90deg, transparent, ${COLORS.gold}, transparent)`,
 					marginBottom: 48,
@@ -222,14 +215,9 @@ export const Scene6CTA: React.FC = () => {
 				}}
 			/>
 
-			{/* Texte CTA principal */}
+			{/* Texte CTA */}
 			<div
-				style={{
-					position: 'relative',
-					zIndex: 2,
-					textAlign: 'center',
-					marginBottom: 48,
-				}}
+				style={{position: 'relative', zIndex: 2, textAlign: 'center', marginBottom: 48}}
 			>
 				<div
 					style={{
@@ -265,7 +253,7 @@ export const Scene6CTA: React.FC = () => {
 			<div
 				style={{
 					position: 'relative',
-					zIndex: 2,
+					zIndex: 3,
 					opacity: btnOpacity,
 					transform: `scale(${btnScale})`,
 					marginBottom: 40,
@@ -295,8 +283,7 @@ export const Scene6CTA: React.FC = () => {
 							left: `${interpolate(frame % 90, [0, 90], [-100, 200], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}%`,
 							width: '40%',
 							height: '100%',
-							background:
-								'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+							background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)',
 							transform: 'skewX(-15deg)',
 						}}
 					/>
@@ -318,14 +305,7 @@ export const Scene6CTA: React.FC = () => {
 				}}
 			>
 				🔗{' '}
-				<span
-					style={{
-						color: COLORS.gold,
-						fontWeight: 700,
-					}}
-				>
-					{SKOOL_URL}
-				</span>
+				<span style={{color: COLORS.gold, fontWeight: 700}}>{SKOOL_URL}</span>
 			</div>
 		</div>
 	);

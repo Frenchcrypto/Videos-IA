@@ -1,7 +1,8 @@
 import React from 'react';
-import {interpolate, useCurrentFrame} from 'remotion';
+import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COLORS, FONT} from '../utils/colors';
 import {fadeIn, slideUp} from '../utils/animations';
+import {ParticleBg} from '../components/ParticleBg';
 
 const KEYWORDS: Array<{
 	label: string;
@@ -10,88 +11,48 @@ const KEYWORDS: Array<{
 	startFrame: number;
 	size: number;
 	color: string;
+	rotate: number;
 }> = [
-	{
-		label: 'TVA',
-		x: 15,
-		y: 62,
-		startFrame: 100,
-		size: 44,
-		color: COLORS.sageGreen,
-	},
-	{
-		label: 'BFR',
-		x: 65,
-		y: 55,
-		startFrame: 130,
-		size: 36,
-		color: COLORS.gold,
-	},
-	{
-		label: 'FEC',
-		x: 80,
-		y: 70,
-		startFrame: 155,
-		size: 40,
-		color: COLORS.sageGreenLight,
-	},
-	{
-		label: 'Liasse',
-		x: 10,
-		y: 78,
-		startFrame: 175,
-		size: 34,
-		color: COLORS.goldLight,
-	},
-	{
-		label: 'Cycle Trésorerie',
-		x: 30,
-		y: 85,
-		startFrame: 200,
-		size: 28,
-		color: COLORS.grayText,
-	},
-	{
-		label: 'Immobilisations',
-		x: 55,
-		y: 80,
-		startFrame: 225,
-		size: 28,
-		color: COLORS.sageGreen,
-	},
-	{
-		label: 'Révision',
-		x: 20,
-		y: 70,
-		startFrame: 250,
-		size: 32,
-		color: COLORS.gold,
-	},
-	{
-		label: 'Capitaux propres',
-		x: 60,
-		y: 88,
-		startFrame: 265,
-		size: 26,
-		color: COLORS.grayText,
-	},
+	{label: 'TVA', x: 12, y: 60, startFrame: 80, size: 52, color: COLORS.sageGreen, rotate: -6},
+	{label: 'BFR', x: 62, y: 53, startFrame: 105, size: 44, color: COLORS.gold, rotate: 4},
+	{label: 'FEC', x: 76, y: 68, startFrame: 128, size: 48, color: COLORS.sageGreenLight, rotate: -3},
+	{label: 'Liasse', x: 8, y: 76, startFrame: 148, size: 38, color: COLORS.goldLight, rotate: 5},
+	{label: 'Cycle Trésorerie', x: 28, y: 84, startFrame: 168, size: 30, color: COLORS.grayText, rotate: -2},
+	{label: 'Immobilisations', x: 52, y: 79, startFrame: 188, size: 30, color: COLORS.sageGreen, rotate: 3},
+	{label: 'Révision', x: 18, y: 69, startFrame: 208, size: 36, color: COLORS.gold, rotate: -5},
+	{label: 'Capitaux propres', x: 58, y: 87, startFrame: 225, size: 26, color: COLORS.grayText, rotate: 2},
 ];
 
 export const Scene2Problem: React.FC = () => {
 	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
 
 	const sceneOpacity = fadeIn(frame, 0, 20);
 
-	// Texte 1
 	const text1Opacity = fadeIn(frame, 5, 25);
 	const text1Y = slideUp(frame, 5, 25, 30);
-
-	// Texte 2
 	const text2Opacity = fadeIn(frame, 45, 25);
 	const text2Y = slideUp(frame, 45, 25, 30);
 
-	// Stress badge
-	const badgeOpacity = fadeIn(frame, 75, 20);
+	const badgeSp = spring({
+		fps,
+		frame: Math.max(0, frame - 5),
+		config: {damping: 120, stiffness: 400, mass: 0.5},
+	});
+	const badgeOpacity = fadeIn(frame, 0, 20);
+
+	const subOpacity = interpolate(frame, [200, 240], [0, 1], {
+		extrapolateLeft: 'clamp',
+		extrapolateRight: 'clamp',
+	});
+
+	const sepWidth = interpolate(frame, [50, 80], [0, 80], {
+		extrapolateLeft: 'clamp',
+		extrapolateRight: 'clamp',
+	});
+
+	// Glow rouge qui pulse
+	const redGlow = 0.06 + 0.02 * Math.sin((frame / 45) * Math.PI * 2);
 
 	return (
 		<div
@@ -110,28 +71,42 @@ export const Scene2Problem: React.FC = () => {
 				overflow: 'hidden',
 			}}
 		>
-			{/* Fond sombre avec vignette */}
+			{/* Fond */}
 			<div
 				style={{
 					position: 'absolute',
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					background:
-						'radial-gradient(ellipse 100% 80% at 50% 20%, #0D0D0D 0%, #070A07 100%)',
+					inset: 0,
+					background: 'radial-gradient(ellipse 100% 80% at 50% 20%, #0D0D0D 0%, #070A07 100%)',
 				}}
 			/>
 
-			{/* Badge rouge "Réalité" */}
+			{/* Glow rouge pulsant */}
+			<div
+				style={{
+					position: 'absolute',
+					top: '10%',
+					left: '50%',
+					transform: 'translate(-50%, 0)',
+					width: 700,
+					height: 500,
+					borderRadius: '50%',
+					background: `radial-gradient(circle, rgba(180,40,40,${redGlow}) 0%, transparent 70%)`,
+					pointerEvents: 'none',
+				}}
+			/>
+
+			<ParticleBg frame={frame} />
+
+			{/* Badge problème avec spring entrance */}
 			<div
 				style={{
 					position: 'relative',
 					zIndex: 2,
-					marginBottom: 48,
+					marginBottom: 44,
 					opacity: badgeOpacity,
+					transform: `scale(${0.4 + 0.6 * badgeSp})`,
 					backgroundColor: 'rgba(180, 40, 40, 0.15)',
-					border: '1px solid rgba(180, 40, 40, 0.4)',
+					border: '1px solid rgba(180, 40, 40, 0.45)',
 					borderRadius: 100,
 					padding: '10px 28px',
 					fontFamily: FONT,
@@ -139,7 +114,7 @@ export const Scene2Problem: React.FC = () => {
 					fontWeight: 600,
 					color: '#E57373',
 					letterSpacing: '2px',
-					textTransform: 'uppercase',
+					textTransform: 'uppercase' as const,
 				}}
 			>
 				⚠ Le problème
@@ -147,17 +122,12 @@ export const Scene2Problem: React.FC = () => {
 
 			{/* Texte principal */}
 			<div
-				style={{
-					position: 'relative',
-					zIndex: 2,
-					textAlign: 'center',
-					marginBottom: 32,
-				}}
+				style={{position: 'relative', zIndex: 2, textAlign: 'center', marginBottom: 32}}
 			>
 				<div
 					style={{
 						fontFamily: FONT,
-						fontSize: 62,
+						fontSize: 60,
 						fontWeight: 800,
 						color: COLORS.white,
 						lineHeight: 1.2,
@@ -172,7 +142,7 @@ export const Scene2Problem: React.FC = () => {
 				<div
 					style={{
 						fontFamily: FONT,
-						fontSize: 62,
+						fontSize: 60,
 						fontWeight: 800,
 						color: COLORS.sageGreenLight,
 						lineHeight: 1.2,
@@ -185,38 +155,31 @@ export const Scene2Problem: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Ligne séparatrice */}
+			{/* Séparateur qui s'étend */}
 			<div
 				style={{
 					position: 'relative',
 					zIndex: 2,
-					width: 80,
+					width: sepWidth,
 					height: 2,
 					backgroundColor: COLORS.gold,
 					borderRadius: 1,
 					marginBottom: 48,
-					opacity: text2Opacity,
 				}}
 			/>
 
-			{/* Mots-clés flottants */}
+			{/* Mots-clés — spring scale depuis 0 + flottaison + rotation */}
 			{KEYWORDS.map((kw, i) => {
-				const kwOpacity = interpolate(
-					frame,
-					[kw.startFrame, kw.startFrame + 20],
-					[0, 1],
-					{extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
-				);
-				const kwY = interpolate(
-					frame,
-					[kw.startFrame, kw.startFrame + 20],
-					[20, 0],
-					{extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
-				);
-
-				// Légère flottaison continue
-				const floatOffset =
-					Math.sin((frame / 60) * Math.PI * 2 + i * 1.2) * 4;
+				const localFrame = Math.max(0, frame - kw.startFrame);
+				const sp = spring({
+					fps,
+					frame: localFrame,
+					config: {damping: 130, stiffness: 500, mass: 0.35},
+				});
+				const opacity = interpolate(localFrame, [0, 10], [0, 1], {
+					extrapolateRight: 'clamp',
+				});
+				const floatY = Math.sin((frame / 55) * Math.PI * 2 + i * 1.3) * 5;
 
 				return (
 					<div
@@ -225,14 +188,14 @@ export const Scene2Problem: React.FC = () => {
 							position: 'absolute',
 							left: `${kw.x}%`,
 							top: `${kw.y}%`,
-							opacity: kwOpacity * 0.85,
-							transform: `translateY(${kwY + floatOffset}px)`,
+							opacity: opacity * 0.88,
+							transform: `scale(${sp}) translateY(${floatY}px) rotate(${kw.rotate}deg)`,
 							fontFamily: FONT,
 							fontSize: kw.size,
 							fontWeight: 700,
 							color: kw.color,
 							letterSpacing: '-0.5px',
-							whiteSpace: 'nowrap',
+							whiteSpace: 'nowrap' as const,
 						}}
 					>
 						{kw.label}
@@ -240,7 +203,7 @@ export const Scene2Problem: React.FC = () => {
 				);
 			})}
 
-			{/* Sous-texte en bas */}
+			{/* Sous-texte */}
 			<div
 				style={{
 					position: 'absolute',
@@ -253,10 +216,7 @@ export const Scene2Problem: React.FC = () => {
 					fontSize: 30,
 					color: COLORS.grayText,
 					lineHeight: 1.4,
-					opacity: interpolate(frame, [220, 260], [0, 1], {
-						extrapolateLeft: 'clamp',
-						extrapolateRight: 'clamp',
-					}),
+					opacity: subOpacity,
 				}}
 			>
 				La formation académique ne suffit pas.

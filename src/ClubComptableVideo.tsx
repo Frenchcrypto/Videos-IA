@@ -1,5 +1,7 @@
 import React from 'react';
-import {AbsoluteFill, Series} from 'remotion';
+import {AbsoluteFill} from 'remotion';
+import {TransitionSeries, linearTiming} from '@remotion/transitions';
+import {fade} from '@remotion/transitions/fade';
 import {Scene1Hook} from './scenes/Scene1Hook';
 import {Scene2Problem} from './scenes/Scene2Problem';
 import {Scene3Solution} from './scenes/Scene3Solution';
@@ -7,49 +9,63 @@ import {Scene4Content} from './scenes/Scene4Content';
 import {Scene5Transformation} from './scenes/Scene5Transformation';
 import {Scene6CTA} from './scenes/Scene6CTA';
 
-// Durées des scènes (frames @ 30fps)
-// Scène 1 — Hook         :   0 →  150  (5s)
-// Scène 2 — Problème     : 150 →  450  (10s)
-// Scène 3 — Solution     : 450 →  900  (15s)
-// Scène 4 — Contenu      : 900 → 1650  (25s)
-// Scène 5 — Transformation:1650→ 2250  (20s)
-// Scène 6 — CTA          :2250 → 2700  (15s)
-// Total                  : 2700 frames = 90 secondes
+// Durées des scènes (frames @ 30fps) — +20 frames par scène pour absorber les transitions
+// Chaque transition = 20 frames de fondu croisé entre deux scènes
+// Total : 2800 frames - 5 × 20 = 2700 frames = 90 secondes
+//
+// Scène 1 — Hook          : 170 frames  (5.7s)
+// Scène 2 — Problème      : 320 frames (10.7s)
+// Scène 3 — Solution      : 470 frames (15.7s)
+// Scène 4 — Contenu       : 770 frames (25.7s)
+// Scène 5 — Transformation: 620 frames (20.7s)
+// Scène 6 — CTA           : 450 frames (15.0s)
+
+const TRANSITION = linearTiming({durationInFrames: 20});
 
 export const ClubComptableVideo: React.FC = () => {
 	return (
 		<AbsoluteFill style={{backgroundColor: '#070A07'}}>
-			<Series>
-				{/* Scène 1 — Hook (5s) */}
-				<Series.Sequence durationInFrames={150}>
+			<TransitionSeries>
+				{/* Scène 1 — Hook */}
+				<TransitionSeries.Sequence durationInFrames={170}>
 					<Scene1Hook />
-				</Series.Sequence>
+				</TransitionSeries.Sequence>
 
-				{/* Scène 2 — Problème (10s) */}
-				<Series.Sequence durationInFrames={300}>
+				<TransitionSeries.Transition timing={TRANSITION} presentation={fade()} />
+
+				{/* Scène 2 — Problème */}
+				<TransitionSeries.Sequence durationInFrames={320}>
 					<Scene2Problem />
-				</Series.Sequence>
+				</TransitionSeries.Sequence>
 
-				{/* Scène 3 — Solution (15s) */}
-				<Series.Sequence durationInFrames={450}>
+				<TransitionSeries.Transition timing={TRANSITION} presentation={fade()} />
+
+				{/* Scène 3 — Solution */}
+				<TransitionSeries.Sequence durationInFrames={470}>
 					<Scene3Solution />
-				</Series.Sequence>
+				</TransitionSeries.Sequence>
 
-				{/* Scène 4 — Contenu Premium (25s) */}
-				<Series.Sequence durationInFrames={750}>
+				<TransitionSeries.Transition timing={TRANSITION} presentation={fade()} />
+
+				{/* Scène 4 — Contenu Premium */}
+				<TransitionSeries.Sequence durationInFrames={770}>
 					<Scene4Content />
-				</Series.Sequence>
+				</TransitionSeries.Sequence>
 
-				{/* Scène 5 — Transformation (20s) */}
-				<Series.Sequence durationInFrames={600}>
+				<TransitionSeries.Transition timing={TRANSITION} presentation={fade()} />
+
+				{/* Scène 5 — Transformation */}
+				<TransitionSeries.Sequence durationInFrames={620}>
 					<Scene5Transformation />
-				</Series.Sequence>
+				</TransitionSeries.Sequence>
 
-				{/* Scène 6 — CTA (15s) */}
-				<Series.Sequence durationInFrames={450}>
+				<TransitionSeries.Transition timing={TRANSITION} presentation={fade()} />
+
+				{/* Scène 6 — CTA */}
+				<TransitionSeries.Sequence durationInFrames={450}>
 					<Scene6CTA />
-				</Series.Sequence>
-			</Series>
+				</TransitionSeries.Sequence>
+			</TransitionSeries>
 		</AbsoluteFill>
 	);
 };
